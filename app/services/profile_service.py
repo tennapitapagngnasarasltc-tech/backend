@@ -49,7 +49,7 @@ def save_profile(user_id: str, email: str, data, latest_score: float | None = No
         response = (
             supabase_admin
             .table("profiles")
-            .insert(profile_data, on_conflict="user_id")
+            .upsert(profile_data, on_conflict="user_id")
             .select("*")
             .execute()
         )
