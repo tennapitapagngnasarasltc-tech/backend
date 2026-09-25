@@ -1,13 +1,15 @@
 import uuid
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPAuthorizationCredentials
 
 from app.schemas.sleep import SleepInput
 from app.utils.preprocess import preprocess
 from app.model.predictor import predict
 from app.services.strategy import generate_strategy
 from app.services.profile_service import save_profile, save_prediction, get_profile
-from app.auth import get_current_user
+from app.auth import get_current_user, security
+from app.services.recommendations import get_for_you_recommendations
 
 app = FastAPI(title="Nidra API")
 
@@ -134,3 +136,11 @@ def get_my_profile(user=Depends(get_current_user)):
     if not profile:
         return {"message": "No profile saved yet. Call /predict first."}
     return profile
+
+
+@app.get("/entertainment/for-you")
+def get_my_entertainment_recommendations(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    user=Depends(get_current_user),
+):
+    return get_for_you_recommendations(user.id, credentials.credentials)
