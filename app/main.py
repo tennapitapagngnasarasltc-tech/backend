@@ -1,5 +1,5 @@
 import uuid
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials
 
@@ -10,6 +10,7 @@ from app.services.strategy import generate_strategy
 from app.services.profile_service import save_profile, save_prediction, get_profile
 from app.auth import get_current_user, security
 from app.services.recommendations import get_for_you_recommendations
+from app.services.suggestions import get_user_suggestions
 
 app = FastAPI(title="Nidra API")
 
@@ -144,3 +145,20 @@ def get_my_entertainment_recommendations(
     user=Depends(get_current_user),
 ):
     return get_for_you_recommendations(user.id, credentials.credentials)
+
+
+@app.get("/suggestions")
+def get_my_suggestions(
+    limit: int = Query(default=3, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+    expected_score_band: str | None = Query(default=None, max_length=32),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    user=Depends(get_current_user),
+):
+    return get_user_suggestions(
+        user.id,
+        credentials.credentials,
+        limit=limit,
+        offset=offset,
+        expected_score_band=expected_score_band,
+    )
